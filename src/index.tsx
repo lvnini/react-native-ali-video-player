@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 import { AliVideoView } from './AliVideoView';
 import type { VideoPlayerHandler, VideoPlayerProps } from './PlayTypes';
-import type { AliVideoViewHandleType,BitrateType } from './VideoTypes';
+import type { AliVideoViewHandleType, BitrateType } from './VideoTypes';
 import { useBackHandler, useDimensions } from '@react-native-community/hooks';
 import ControllerView from './ControllerView';
 
@@ -41,6 +41,7 @@ const VideoPlayer = forwardRef(
       onAliError,
       onAliPrepared,
       onAliRenderingStart,
+      onGetTiming,
       isHiddenBack,
       showTiming,
       setSpeed,
@@ -61,12 +62,30 @@ const VideoPlayer = forwardRef(
     const [complete, setComplete] = useState(false); // 是否加载完成
     const [playSource, setPlaySource] = useState(source);
     const [innerHiddenBack, setInnerHiddenBack] = useState(isHiddenBack);
-    const [innerHiddenFullBack, setInnerHiddenFullBack] = useState(isHiddenFullBack);
+    const [innerHiddenFullBack, setInnerHiddenFullBack] =
+      useState(isHiddenFullBack);
     const [innerSetSpeed, setInnerSetSpeed] = useState(setSpeed);
-    const [innerSelectBitrateIndex, setInnerSelectBitrateIndex] = useState(0);
+    const [innerSelectBitrateIndex, setInnerSelectBitrateIndex] =
+      useState(selectBitrateIndex);
     const { screen, window } = useDimensions();
     const [videoList, setVideoList] = useState<BitrateType[]>([]);
     const [audioList, setAudioList] = useState<BitrateType | undefined>();
+    const [timing, setTiming] = useState(-1); // 定时时间: -1 不开启
+
+    const timingOutRef = useRef<any>();
+    useEffect(() => {
+      if (timing <= -1) {
+        clearTimeout(timingOutRef.current);
+        timingOutRef.current = null;
+        setTiming(-1);
+        return;
+      }
+      timingOutRef.current = setTimeout(() => {
+        onGetTiming?.(timing - 1);
+        setTiming(timing - 1);
+      }, 1000);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [timing]);
 
     useEffect(() => {
       setInnerHiddenBack(isHiddenBack);
@@ -100,6 +119,19 @@ const VideoPlayer = forwardRef(
       seekTo: (position: number) => {
         videoRef.current?.seekTo(position);
       },
+
+      onSpeed: (s: number) => {
+        setInnerSetSpeed(s);
+      },
+
+      onBitrateIndex: (index: number) => {
+        setInnerSelectBitrateIndex(index);
+      },
+
+      onSetTiming: (s: number) => {
+        onTiming(s);
+      },
+
       destroy: () => {
         videoRef.current?.destroyPlay();
       },
@@ -176,9 +208,11 @@ const VideoPlayer = forwardRef(
       onBufferProgress?.(e.nativeEvent.position);
       onAliBufferedPositionUpdate?.(e);
     };
-    const _onAliBitrateReady = (e: NativeSyntheticEvent<{bitrates: [BitrateType]}>) => {
+    const _onAliBitrateReady = (
+      e: NativeSyntheticEvent<{ bitrates: [BitrateType] }>
+    ) => {
       if (e.nativeEvent.bitrates && e.nativeEvent.bitrates.length > 0) {
-        setInnerSelectBitrateIndex(e.nativeEvent.bitrates[0]['index'])
+        setInnerSelectBitrateIndex(e.nativeEvent.bitrates[0].index);
       }
       const bitrates = e.nativeEvent.bitrates;
       let videoList: BitrateType[] = [];
@@ -239,12 +273,12 @@ const VideoPlayer = forwardRef(
         handlePlay();
       }
     };
-    const onSetSpeed = (value: number) => { 
+    const onSetSpeed = (value: number) => {
       setInnerSetSpeed(value);
-    }
-    const onSelectBitrateIndex = (value: number) => { 
+    };
+    const onSelectBitrateIndex = (value: number) => {
       setInnerSelectBitrateIndex(value);
-    }
+    };
     const onFull = () => {
       if (isFull) {
         handleFullScreenOut();
@@ -252,16 +286,25 @@ const VideoPlayer = forwardRef(
         handleFullScreenIn();
       }
     };
+
+    // 设置定时
+    const onTiming = (time: number) => {
+      clearTimeout(timingOutRef.current);
+      timingOutRef.current = null;
+      setTiming(time - 1);
+    };
     const isOrientationLandscape = isLandscape;
-    const currentHeight = StatusBar.currentHeight ? (StatusBar.currentHeight / 2) : 0;
+    const currentHeight = StatusBar.currentHeight
+      ? StatusBar.currentHeight / 2
+      : 0;
     const fullscreenStyle = StyleSheet.flatten<ViewStyle>([
       {
         position: 'absolute',
         top: 0,
         right: 0,
         width: isOrientationLandscape
-        ? (Math.max(screen.width, screen.height) - currentHeight)
-        : (Math.min(screen.width, screen.height) - currentHeight),
+          ? Math.max(screen.width, screen.height) - currentHeight
+          : Math.min(screen.width, screen.height) - currentHeight,
         height: isOrientationLandscape
           ? Math.min(screen.width, screen.height)
           : Math.max(screen.width, screen.height),
@@ -281,7 +324,7 @@ const VideoPlayer = forwardRef(
           : Math.max(window.width, window.height),
       },
     ]);
-    
+
     return (
       <View style={[styles.base, isFull ? fullscreenStyle : style]}>
         <AliVideoView
@@ -325,6 +368,8 @@ const VideoPlayer = forwardRef(
           isStart={isPlaying}
           total={duration}
           onBack={onBack}
+          timing={timing}
+          setTiming={onTiming}
         />
       </View>
     );

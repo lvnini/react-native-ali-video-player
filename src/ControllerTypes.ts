@@ -1,4 +1,18 @@
-import { BitrateType } from './VideoTypes'
+/*
+ * @Author: lvnini lv@lvnini.cn
+ * @Date: 2022-04-15 18:52:36
+ * @LastEditors: lvnini lv@lvnini.cn
+ * @LastEditTime: 2024-03-28 10:44:53
+ * @FilePath: /AwesomeProject/Users/lvnini/Downloads/react-native-ali-video-player/src/ControllerTypes.ts
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
+type BitrateType = {
+  index: number;
+  bitrate: number;
+  height: number;
+  width: number;
+  title?: string;
+};
 
 export type ControllerViewProps = {
   isFull: boolean;
@@ -14,7 +28,12 @@ export type ControllerViewProps = {
   onFull?: () => void;
   title?: string;
   onBack?: () => void;
-  showTiming?: boolean,
+  showTiming?: boolean;
+  /**
+   * 定时时间
+   */
+  timing: number;
+  setTiming: (value: number) => void;
   /**
    * 是否隐藏返回按钮
    */

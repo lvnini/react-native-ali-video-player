@@ -24,7 +24,7 @@ function formatTime(second: number) {
     i = Math.floor(s / 60);
     s = s % 60;
   }
-  
+
   // 补零
   const zero = function (v: number) {
     return v >> 0 < 10 ? '0' + v : v;
@@ -42,9 +42,10 @@ const ControllerView = ({
   onSliderValueChange,
   onBack,
   title,
-  speed=1,
+  speed = 1,
   setSpeed,
-  audioList,
+  timing,
+  setTiming,
   videoList,
   showTiming = false,
   selectBitrateIndex = 0,
@@ -60,9 +61,7 @@ const ControllerView = ({
   const [choiceView, setChoiceView] = useState(0); // 0不显示 1定时 2倍数 3清晰度
   const [sliderValue, setSliderValue] = useState(current);
   const [autoHide, setAutoHide] = useState(true); /// 自动隐藏
-  const [isTiming, setIsTiming] = useState(showTiming); // 是否开启定时 ，默认关闭
-  const [timing, setTiming] = useState(-1); // 定时时间: -1 不开启
-
+  // const [timing, setTiming] = useState(-1); // 定时时间: -1 不开启
 
   const onValueChange = (value: number) => {
     setSliderValue(Math.round(value));
@@ -98,19 +97,6 @@ const ControllerView = ({
     setSliderValue(current);
   }, [current, setSliderValue]);
 
-
-  const timingOutRef = useRef<any>();
-  useEffect(() => {
-    if (timing === -1) {
-      clearTimeout(timingOutRef.current);
-      timingOutRef.current = null;
-      return
-    }
-    timingOutRef.current = setTimeout(() => {
-      setTiming(timing - 1);
-    }, 1000);
-  }, [timing]);
-
   const onSlidingStart = () => {
     setAutoHide(false);
     setHide(false);
@@ -129,26 +115,25 @@ const ControllerView = ({
     }, 500);
   };
   // 计算是否在有效区域点击
-  const calculateEffectiveArea = (x: number, y: number) => {
-    // width - x == 
-    if (height - y  < 95) {
-      return true
+  const calculateEffectiveArea = (y: number) => {
+    if (height - y < 95) {
+      return true;
     }
-    return false
-  }
+    return false;
+  };
 
   const singleTap = Gesture.Tap()
     .runOnJS(true)
     .maxDuration(250)
     .onStart((res) => {
-      if (hide || calculateEffectiveArea(res.x,res.y)) {
+      if (hide || calculateEffectiveArea(res.y)) {
         setHide(false); // 显示
-        return
+        return;
       }
       if (choiceView !== 0) {
         setHide(false);
         setChoiceView(0);
-        return
+        return;
       }
       setHide(true); // 隐藏
     });
@@ -206,12 +191,10 @@ const ControllerView = ({
 
   // 设置定时
   const onTiming = (time: number) => {
-    clearTimeout(timingOutRef.current);
-    timingOutRef.current = null;
-    setTiming(time-1);
-    setChoiceView(0)
-  }
-  
+    setTiming(time);
+    setChoiceView(0);
+  };
+
   const renderContainer = () => {
     const showBack = !isFull && !isHiddenBack;
     if (isLoading) {
@@ -263,19 +246,27 @@ const ControllerView = ({
           </View>
         )}
         {isFull && !isHiddenFullBack ? (
-        <ImageBackground source={imageBg2} resizeMode="cover" style={styles.top} >
-          <TouchableOpacity onPress={onFull} style={styles.topView}>
+          <ImageBackground
+            source={imageBg2}
+            resizeMode="cover"
+            style={styles.top}
+          >
+            <TouchableOpacity onPress={onFull} style={styles.topView}>
               <Image
                 style={styles.topLeftIcon}
                 source={require('./assets/chevron-left.png')}
               />
               <Text style={styles.title}>{title ?? ''}</Text>
-          </TouchableOpacity>
-        </ImageBackground>
+            </TouchableOpacity>
+          </ImageBackground>
         ) : (
           !isHiddenBack && (
-            <ImageBackground source={imageBg2} resizeMode="cover" style={styles.top}>
-              <TouchableOpacity onPress={onBack} >
+            <ImageBackground
+              source={imageBg2}
+              resizeMode="cover"
+              style={styles.top}
+            >
+              <TouchableOpacity onPress={onBack}>
                 <Image
                   style={styles.topLeftIcon}
                   source={require('./assets/chevron-down.png')}
@@ -286,65 +277,122 @@ const ControllerView = ({
         )}
 
         {choiceView == 1 && (
-            <View style={styles.choiceView}>
-                <TouchableOpacity style={[styles.choiceItem,styles.choiceItemSelected]} onPress={() => {onTiming(60*60)}}>
-                  <Text style={styles.choiceText}>60分钟</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.choiceItem,styles.choiceItemSelected]} onPress={() => {onTiming(30*60)}}>
-                  <Text style={styles.choiceText}>30分钟</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.choiceItem,styles.choiceItemSelected]} onPress={() => {onTiming(15*60)}}>
-                  <Text style={styles.choiceText}>15分钟</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.choiceItem,styles.choiceItemSelected]} onPress={() => {onTiming(total-current)}}>
-                  <Text style={styles.choiceText}>播完本集</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.choiceItem]} onPress={() => {onTiming(-1)}}>
-                  <Text style={styles.choiceText}>不开启</Text>
-                </TouchableOpacity>
-            </View>
+          <View style={styles.choiceView}>
+            <TouchableOpacity
+              style={[styles.choiceItem, styles.choiceItemSelected]}
+              onPress={() => {
+                onTiming(60 * 60);
+              }}
+            >
+              <Text style={styles.choiceText}>60分钟</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.choiceItem, styles.choiceItemSelected]}
+              onPress={() => {
+                onTiming(30 * 60);
+              }}
+            >
+              <Text style={styles.choiceText}>30分钟</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.choiceItem, styles.choiceItemSelected]}
+              onPress={() => {
+                onTiming(15 * 60);
+              }}
+            >
+              <Text style={styles.choiceText}>15分钟</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.choiceItem, styles.choiceItemSelected]}
+              onPress={() => {
+                onTiming(total - current);
+              }}
+            >
+              <Text style={styles.choiceText}>播完本集</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.choiceItem]}
+              onPress={() => {
+                onTiming(-1);
+              }}
+            >
+              <Text style={styles.choiceText}>不开启</Text>
+            </TouchableOpacity>
+          </View>
         )}
         {choiceView == 2 && (
-            <View style={styles.choiceView}>
-                <TouchableOpacity style={[styles.choiceItem,styles.choiceItemSelected]} onPress={() => {setSpeed?.(2.5),setChoiceView(0)}}>
-                  <Text style={styles.choiceText}>2.5x</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.choiceItem,styles.choiceItemSelected]} onPress={() => {setSpeed?.(2),setChoiceView(0)}}>
-                  <Text style={styles.choiceText} >2.0x</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.choiceItem,styles.choiceItemSelected]} onPress={() => {setSpeed?.(1.5),setChoiceView(0)}}>
-                  <Text style={styles.choiceText} >1.5x</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.choiceItem,styles.choiceItemSelected]} onPress={() => {setSpeed?.(1.25),setChoiceView(0)}}>
-                  <Text style={styles.choiceText} >1.25x</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.choiceItem]} onPress={() => {setSpeed?.(1),setChoiceView(0)}}>
-                  <Text style={styles.choiceText}>正常</Text>
-                </TouchableOpacity>
-            </View>
+          <View style={styles.choiceView}>
+            <TouchableOpacity
+              style={[styles.choiceItem, styles.choiceItemSelected]}
+              onPress={() => {
+                setSpeed?.(2.5), setChoiceView(0);
+              }}
+            >
+              <Text style={styles.choiceText}>2.5x</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.choiceItem, styles.choiceItemSelected]}
+              onPress={() => {
+                setSpeed?.(2), setChoiceView(0);
+              }}
+            >
+              <Text style={styles.choiceText}>2.0x</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.choiceItem, styles.choiceItemSelected]}
+              onPress={() => {
+                setSpeed?.(1.5), setChoiceView(0);
+              }}
+            >
+              <Text style={styles.choiceText}>1.5x</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.choiceItem, styles.choiceItemSelected]}
+              onPress={() => {
+                setSpeed?.(1.25), setChoiceView(0);
+              }}
+            >
+              <Text style={styles.choiceText}>1.25x</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.choiceItem]}
+              onPress={() => {
+                setSpeed?.(1), setChoiceView(0);
+              }}
+            >
+              <Text style={styles.choiceText}>正常</Text>
+            </TouchableOpacity>
+          </View>
         )}
         {choiceView == 3 && (
           <View style={styles.choiceView}>
-            {
-              videoList?.map((product,index) => 
-                <TouchableOpacity
-                  style={[styles.choiceItem, videoList.length > (index + 1) && styles.choiceItemSelected]}
-                  key={product.index + index}
-                  onPress={() => { setSelectBitrateIndex?.(product.index), setChoiceView(0) }} >
-                    <Text style={styles.choiceText} >{product.title}</Text>
-                </TouchableOpacity>
-              )
-            }
-            </View>
+            {videoList?.map((product, index) => (
+              <TouchableOpacity
+                style={[
+                  styles.choiceItem,
+                  videoList.length > index + 1 && styles.choiceItemSelected,
+                ]}
+                key={product.index + index}
+                onPress={() => {
+                  setSelectBitrateIndex?.(product.index), setChoiceView(0);
+                }}
+              >
+                <Text style={styles.choiceText}>{product.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
-        
-        
-        <ImageBackground source={imageBg} resizeMode="cover" style={styles.bottom}>
+
+        <ImageBackground
+          source={imageBg}
+          resizeMode="cover"
+          style={styles.bottom}
+        >
           <Slider
-            minimumTrackTintColor={'#0273FF'}
+            minimumTrackTintColor={'#FF4040'}
             maximumTrackTintColor={'rgba(255,255,255,0.8)'}
             style={styles.slider}
-            // thumbTintColor={'#0273FF'}
+            // thumbTintColor={'#FF4040'}
             thumbImage={require('./assets/play_thumb.png')}
             onSlidingStart={onSlidingStart}
             onSlidingComplete={onSlidingComplete}
@@ -368,29 +416,40 @@ const ControllerView = ({
               <Text style={styles.time}>{formatTime(current)} / </Text>
               <Text style={styles.time}>{formatTime(total)}</Text>
             </View>
-            {
-              (isTiming && isFull) &&
-              <TouchableOpacity onPress={() => setChoiceView(1)} style={styles.bottomButtom}>
-                  <Text style={styles.buttomText}>{timing == -1 ? '定时' : formatTime(timing)}</Text>
+            {showTiming && isFull && (
+              <TouchableOpacity
+                onPress={() => setChoiceView(1)}
+                style={styles.bottomButtom}
+              >
+                <Text style={styles.buttomText}>
+                  {timing == -1 ? '定时' : formatTime(timing)}
+                </Text>
               </TouchableOpacity>
-            }
-            {
-              isFull &&
-              <TouchableOpacity onPress={()=>setChoiceView(2)} style={styles.bottomButtom}>
-                <Text style={styles.buttomText}>{ speed == 1 ? '倍速' : speed+'x' }</Text>
+            )}
+            {isFull && (
+              <TouchableOpacity
+                onPress={() => setChoiceView(2)}
+                style={styles.bottomButtom}
+              >
+                <Text style={styles.buttomText}>
+                  {speed == 1 ? '倍速' : speed + 'x'}
+                </Text>
               </TouchableOpacity>
-            }
+            )}
+            {videoList && videoList.length > 0 && isFull && (
+              <TouchableOpacity
+                onPress={() => setChoiceView(3)}
+                style={styles.bottomButtom}
+              >
+                <Text style={styles.buttomText}>
+                  {videoList?.map(
+                    (product) =>
+                      product.index == selectBitrateIndex && product.title
+                  )}
+                </Text>
+              </TouchableOpacity>
+            )}
             {
-              (videoList && videoList.length > 0 && isFull) &&
-                <TouchableOpacity onPress={() => setChoiceView(3)} style={styles.bottomButtom}>
-                  <Text style={styles.buttomText}>
-                    {
-                    videoList?.map((product) => (product.index == selectBitrateIndex && product.title))
-                    }
-                  </Text>
-                </TouchableOpacity>
-            }
-            { 
               <TouchableOpacity onPress={onFull} style={styles.bottomFull}>
                 <Image
                   style={styles.bottomRightIcon}
@@ -450,9 +509,9 @@ const styles = StyleSheet.create({
   },
   bottom: {
     position: 'absolute',
-    right: 20,
+    right: 0,
     bottom: 0,
-    left: 20,
+    left: 0,
     flexDirection: 'column',
     alignItems: 'center',
     paddingBottom: 10,
@@ -461,9 +520,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingLeft: 20,
+    paddingRight: 20,
   },
   timeView: {
-    flex:1,
+    flex: 1,
     flexDirection: 'row',
   },
   bottomButtom: {
@@ -487,13 +548,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  image:{
+  image: {
     flex: 1,
     justifyContent: 'center',
   },
   slider: {
     flex: 1,
-    width: "100%",
+    width: '100%',
   },
   sliderTips: {
     width: 90,
@@ -532,7 +593,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     bottom: 0,
-    height: "100%",
+    height: '100%',
     width: 200,
     flexDirection: 'column',
     justifyContent: 'center',

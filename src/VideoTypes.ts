@@ -35,7 +35,13 @@ export type OnLoadingEndEvent = (e: NativeSyntheticEvent<{}>) => void;
 /**
  * 音轨信息
  */
-export type OnAliBitrateReadyEvent = (e: NativeSyntheticEvent<{bitrates: [{index: number,bitrate:number,height:number,width:number}]}>) => void;
+export type OnAliBitrateReadyEvent = (
+  e: NativeSyntheticEvent<{
+    bitrates: [
+      { index: number; bitrate: number; height: number; width: number }
+    ];
+  }>
+) => void;
 /**
  * 首帧渲染
  */
@@ -66,7 +72,13 @@ export type OnAutoPlayStartEvent = (e: NativeSyntheticEvent<{}>) => void;
  */
 export type OnLoopingStartEvent = (e: NativeSyntheticEvent<{}>) => void;
 
-export type BitrateType = { index: number, bitrate: number, height: number, width: number, title?: string }
+export type BitrateType = {
+  index: number;
+  bitrate: number;
+  height: number;
+  width: number;
+  title?: string;
+};
 
 export type AliVideoViewEvent = Partial<{
   onAliCompletion: OnCompletionEvent; // 播放完成事件
@@ -84,8 +96,22 @@ export type AliVideoViewEvent = Partial<{
   onAliBitrateReady: OnAliBitrateReadyEvent; //  音轨信息
 }>;
 export type AliVideoViewProps = React.ComponentPropsWithRef<typeof View> & {
-  /** 视频播放链接 、暂不支持本地*/
-  source: string;
+  /** 视频播放链接 、支持本地*/
+  source: {
+    uri?: string;
+    sts?: {
+      vid: string;
+      region: string;
+      securityToken: string;
+      accessKeyId: string;
+      accessKeySecret: string;
+    };
+    auth?: {
+      vid: string;
+      region: string;
+      playAuth: string;
+    };
+  };
   /** 是否自动播放*/
   setAutoPlay?: boolean;
   /** 是否循环播放*/
