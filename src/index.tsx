@@ -42,6 +42,7 @@ const VideoPlayer = forwardRef(
       onAliPrepared,
       onAliRenderingStart,
       onGetTiming,
+      onGetSpeed,
       isHiddenBack,
       showTiming,
       setSpeed,
@@ -275,6 +276,7 @@ const VideoPlayer = forwardRef(
     };
     const onSetSpeed = (value: number) => {
       setInnerSetSpeed(value);
+      onGetSpeed(value);
     };
     const onSelectBitrateIndex = (value: number) => {
       setInnerSelectBitrateIndex(value);
