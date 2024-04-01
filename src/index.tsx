@@ -276,7 +276,7 @@ const VideoPlayer = forwardRef(
     };
     const onSetSpeed = (value: number) => {
       setInnerSetSpeed(value);
-      onGetSpeed(value);
+      onGetSpeed?.(value);
     };
     const onSelectBitrateIndex = (value: number) => {
       setInnerSelectBitrateIndex(value);
