@@ -35,6 +35,7 @@ const ControllerView = ({
   total,
   current,
   isFull,
+  isLandscape,
   isStart,
   onPressedStart,
   isLoading,
@@ -51,6 +52,7 @@ const ControllerView = ({
   selectBitrateIndex = 0,
   setSelectBitrateIndex,
   isHiddenBack = false,
+  isHiddenController = true,
   isHiddenFullBack = false,
 }: ControllerViewProps) => {
   const isMountRef = useRef(true);
@@ -249,7 +251,7 @@ const ControllerView = ({
           <ImageBackground
             source={imageBg2}
             resizeMode="cover"
-            style={styles.top}
+            style={[styles.top, { left: isFull && isLandscape ? 30 : 0 }]}
           >
             <TouchableOpacity onPress={onFull} style={styles.topView}>
               <Image
@@ -383,87 +385,89 @@ const ControllerView = ({
           </View>
         )}
 
-        <ImageBackground
-          source={imageBg}
-          resizeMode="cover"
-          style={styles.bottom}
-        >
-          <Slider
-            minimumTrackTintColor={'#FF4040'}
-            maximumTrackTintColor={'rgba(255,255,255,0.8)'}
-            style={styles.slider}
-            // thumbTintColor={'#FF4040'}
-            thumbImage={require('./assets/play_thumb.png')}
-            onSlidingStart={onSlidingStart}
-            onSlidingComplete={onSlidingComplete}
-            minimumValue={0}
-            onValueChange={onValueChange}
-            value={current}
-            maximumValue={total}
-          />
-          <View style={styles.bottomView}>
-            <TouchableOpacity onPress={onPressedStart}>
-              <Image
-                style={styles.bottomLeftIcon}
-                source={
-                  isStart
-                    ? require('./assets/pause.png')
-                    : require('./assets/play.png')
-                }
-              />
-            </TouchableOpacity>
-            <View style={styles.timeView}>
-              <Text style={styles.time}>{formatTime(current)} / </Text>
-              <Text style={styles.time}>{formatTime(total)}</Text>
-            </View>
-            {showTiming && isFull && (
-              <TouchableOpacity
-                onPress={() => setChoiceView(1)}
-                style={styles.bottomButtom}
-              >
-                <Text style={styles.buttomText}>
-                  {timing == -1 ? '定时' : formatTime(timing)}
-                </Text>
-              </TouchableOpacity>
-            )}
-            {isFull && (
-              <TouchableOpacity
-                onPress={() => setChoiceView(2)}
-                style={styles.bottomButtom}
-              >
-                <Text style={styles.buttomText}>
-                  {speed == 1 ? '倍速' : speed + 'x'}
-                </Text>
-              </TouchableOpacity>
-            )}
-            {videoList && videoList.length > 0 && isFull && (
-              <TouchableOpacity
-                onPress={() => setChoiceView(3)}
-                style={styles.bottomButtom}
-              >
-                <Text style={styles.buttomText}>
-                  {videoList?.map(
-                    (product) =>
-                      product.index == selectBitrateIndex && product.title
-                  )}
-                </Text>
-              </TouchableOpacity>
-            )}
-            {
-              <TouchableOpacity onPress={onFull} style={styles.bottomFull}>
+        {isHiddenController && (
+          <ImageBackground
+            source={imageBg}
+            resizeMode="cover"
+            style={[styles.bottom, { left: isFull && isLandscape ? 30 : 0 }]}
+          >
+            <Slider
+              minimumTrackTintColor={'#FF4040'}
+              maximumTrackTintColor={'rgba(255,255,255,0.8)'}
+              style={styles.slider}
+              // thumbTintColor={'#FF4040'}
+              thumbImage={require('./assets/play_thumb.png')}
+              onSlidingStart={onSlidingStart}
+              onSlidingComplete={onSlidingComplete}
+              minimumValue={0}
+              onValueChange={onValueChange}
+              value={current}
+              maximumValue={total}
+            />
+            <View style={styles.bottomView}>
+              <TouchableOpacity onPress={onPressedStart}>
                 <Image
-                  style={styles.bottomRightIcon}
+                  style={styles.bottomLeftIcon}
                   source={
-                    isFull
-                      ? require('./assets/exit-fullscreen.png')
-                      : require('./assets/fullscreen.png')
+                    isStart
+                      ? require('./assets/pause.png')
+                      : require('./assets/play.png')
                   }
                 />
-                <Text style={styles.time}>{isFull && '退出全屏'}</Text>
               </TouchableOpacity>
-            }
-          </View>
-        </ImageBackground>
+              <View style={styles.timeView}>
+                <Text style={styles.time}>{formatTime(current)} / </Text>
+                <Text style={styles.time}>{formatTime(total)}</Text>
+              </View>
+              {showTiming && isFull && (
+                <TouchableOpacity
+                  onPress={() => setChoiceView(1)}
+                  style={styles.bottomButtom}
+                >
+                  <Text style={styles.buttomText}>
+                    {timing == -1 ? '定时' : formatTime(timing)}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {isFull && (
+                <TouchableOpacity
+                  onPress={() => setChoiceView(2)}
+                  style={styles.bottomButtom}
+                >
+                  <Text style={styles.buttomText}>
+                    {speed == 1 ? '倍速' : speed + 'x'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {videoList && videoList.length > 0 && isFull && (
+                <TouchableOpacity
+                  onPress={() => setChoiceView(3)}
+                  style={styles.bottomButtom}
+                >
+                  <Text style={styles.buttomText}>
+                    {videoList?.map(
+                      (product) =>
+                        product.index == selectBitrateIndex && product.title
+                    )}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {
+                <TouchableOpacity onPress={onFull} style={styles.bottomFull}>
+                  <Image
+                    style={styles.bottomRightIcon}
+                    source={
+                      isFull
+                        ? require('./assets/exit-fullscreen.png')
+                        : require('./assets/fullscreen.png')
+                    }
+                  />
+                  <Text style={styles.time}>{isFull && '退出全屏'}</Text>
+                </TouchableOpacity>
+              }
+            </View>
+          </ImageBackground>
+        )}
       </>
     );
   };
@@ -494,7 +498,7 @@ const styles = StyleSheet.create({
   },
   top: {
     position: 'absolute',
-    left: 20,
+    left: 10,
     top: 0,
     right: 10,
     paddingTop: 10,
@@ -519,7 +523,7 @@ const styles = StyleSheet.create({
   bottomView: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     paddingLeft: 20,
     paddingRight: 20,
   },
@@ -529,7 +533,7 @@ const styles = StyleSheet.create({
   },
   bottomButtom: {
     alignItems: 'center',
-    marginLeft: 10,
+    // marginLeft: 10,
     marginRight: 10,
     borderColor: '#ffffff',
     borderWidth: 0.5,

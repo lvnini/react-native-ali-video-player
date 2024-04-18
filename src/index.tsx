@@ -1,6 +1,5 @@
 import {
   NativeSyntheticEvent,
-  StatusBar,
   StyleSheet,
   View,
   ViewStyle,
@@ -43,6 +42,7 @@ const VideoPlayer = forwardRef(
       onAliRenderingStart,
       onGetTiming,
       onGetSpeed,
+      isHiddenController,
       isHiddenBack,
       showTiming,
       setSpeed,
@@ -295,19 +295,19 @@ const VideoPlayer = forwardRef(
       timingOutRef.current = null;
       setTiming(time - 1);
     };
-    const isOrientationLandscape = isLandscape;
-    const currentHeight = StatusBar.currentHeight
-      ? StatusBar.currentHeight / 2
-      : 0;
+    // const isOrientationLandscape = isLandscape;
+    // const currentHeight = StatusBar.currentHeight
+    //   ? StatusBar.currentHeight / 2
+    //   : 0;
     const fullscreenStyle = StyleSheet.flatten<ViewStyle>([
       {
         position: 'absolute',
         top: 0,
         right: 0,
-        width: isOrientationLandscape
-          ? Math.max(screen.width, screen.height) - currentHeight
-          : Math.min(screen.width, screen.height) - currentHeight,
-        height: isOrientationLandscape
+        width: isLandscape
+          ? Math.max(screen.width, screen.height)
+          : Math.min(screen.width, screen.height),
+        height: isLandscape
           ? Math.min(screen.width, screen.height)
           : Math.max(screen.width, screen.height),
         zIndex: 999,
@@ -318,10 +318,10 @@ const VideoPlayer = forwardRef(
         position: 'absolute',
         top: 0,
         left: 0,
-        width: isOrientationLandscape
+        width: isLandscape
           ? Math.max(window.width, window.height)
           : Math.min(window.width, window.height),
-        height: isOrientationLandscape
+        height: isLandscape
           ? Math.min(window.width, window.height)
           : Math.max(window.width, window.height),
       },
@@ -346,7 +346,6 @@ const VideoPlayer = forwardRef(
           {...rest}
           ref={videoRef}
         />
-        <StatusBar hidden={isFull} />
         <ControllerView
           title={title}
           onPause={handlePause}
@@ -354,6 +353,8 @@ const VideoPlayer = forwardRef(
           onSliderValueChange={onSliderValueChange}
           current={currentTime}
           isFull={isFull}
+          isLandscape={isLandscape}
+          isHiddenController={isHiddenController}
           onFull={onFull}
           isHiddenBack={innerHiddenBack}
           isHiddenFullBack={innerHiddenFullBack}
